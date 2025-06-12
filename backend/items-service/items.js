@@ -1,52 +1,67 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const mysql = require('mysql2');
+const express = require("express");
+const bodyParser = require("body-parser");
+const db = require("../db/dbSQL");
+const PORT = 3000;
+require("dotenv").config();
 
-const PORT = 3002;
 const app = express();
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-    db.query('SELECT * FROM items', (err, results) => {
-        if (err) throw err;
-        res.json(results);
-    });
+app.get("/", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM items");
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Gagal Mengambil Data");
+  }
 });
 
-app.get('/:id_item', (req, res) => {
-  const sql = 'SELECT * FROM items WHERE id_item = ?';
-  db.query(sql, [req.params.id_item], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+app.get("/item/:slug", async (req, res) => {
+  try {
+    const sql = "SELECT * FROM items WHERE slug = ?";
+    const [result] = await db.query(sql, [req.params.slug]);
 
     if (result.length === 0) {
-      return res.status(404).json({ message: 'Item tidak ditemukan' });
+      return res.status(404).json({ message: "Item tidak ditemukan" });
     }
 
     res.status(200).json(result[0]);
-  });
+  } catch (err) {
+    console.error(err); // <-- akan cetak error ke terminal agar bisa di-debug
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
-app.post('/add-to-cart', (req, res) => {
-  const { id_user, id_item, jumlah } = req.body;
-
-  const checkSql = 'SELECT * FROM cart WHERE id_user = ? AND id_item = ?';
-
-  db.query(checkSql, [id_user, id_item], (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-
-    if (results.length > 0) {
-      const updateSql = 'UPDATE cart SET jumlah = jumlah + ? WHERE id_user = ? AND id_item = ?';
-      db.query(updateSql, [jumlah, id_user, id_item], (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        res.status(200).json({ message: 'Jumlah item diperbarui di cart' });
-      });
-    } else {
-
-    const insertSql = 'INSERT INTO cart (id_user, id_item, jumlah) VALUES (?, ?, ?)';
-      db.query(insertSql, [id_user, id_item, jumlah], (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        res.status(201).json({ message: 'Item ditambahkan ke cart' });
-      });
-    }
-  });
+app.post("/cart", async (req, res) => {
+  const { user_id, item_id, quantity } = req.body;
+  try {
+    const sql = `INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, ?)`;
+    await db.query(sql, [user_id, item_id, quantity]);
+    res.status(201).json({ message: "Item berhasil ditambahkan ke cart" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
+app.get("/cart/:userId", async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id, i.name, i.price, c.quantity, (i.price * c.quantity) AS total
+      FROM cart c
+      JOIN items i ON c.item_id = i.id
+      WHERE c.user_id = ?`;
+    const [result] = await db.query(sql, [req.params.userId]);
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.listen(PORT, () =>
+  console.log(`Server jalan pada port
+${PORT}`)
+);
