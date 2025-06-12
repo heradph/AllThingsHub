@@ -1,0 +1,64 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/userSQL");
+
+// Generate JWT untuk user MySQL
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+};
+
+// Register user dengan username & password (MySQL)
+const register = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const existing = await User.getUserByUsername(username);
+    if (existing)
+      return res.status(400).json({ message: "Username sudah dipakai!" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await User.createUser(username, hashed);
+    res.status(201).json({ message: "Register Sukses!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Login user dengan username & password (MySQL)
+const login = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await User.getUserByUsername(username);
+    if (!user)
+      return res.status(400).json({ message: "Username atau Password salah!" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Username atau Password salah!" });
+
+    const token = generateToken({ id: user.id, username: user.username });
+    res.json({ message: "Login Sukses!", token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Generate JWT untuk user Google (MongoDB)
+const generateTokenForGoogleUser = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      googleId: user.googleId,
+      displayName: user.displayName,
+      email: user.email,
+      photo: user.photo,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+};
+
+module.exports = {
+  register,
+  login,
+  generateTokenForGoogleUser,
+};
