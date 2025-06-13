@@ -8,6 +8,12 @@ const {
 
 const router = express.Router();
 
+router.get("/", (req, res) => {
+  res.send(
+    `<a href="/auth/google">login</a> <br> <a href="/auth/google/reauth">Reauth</a>`
+  );
+});
+
 router.post("/register", register);
 router.post("/login", login);
 
@@ -24,13 +30,13 @@ router.get(
   }),
   (req, res) => {
     const token = generateTokenForGoogleUser(req.user);
-    res.send(`<h1> Hello, ${req.user.displayName}! </h1>
+    res.send(`<h1> Hello, ${req.user.displayname}! </h1>
     <p> Email: ${req.user.email} </p>
     <img src="${req.user.photo}" width="100"/>
     <br>
     <a href="/logout"> logout </a>
     <br><br>
-    Token-Anda: ${ token }`);
+    Token-Anda: ${token}`);
   }
 );
 

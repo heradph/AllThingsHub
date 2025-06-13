@@ -1,10 +1,20 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/userSQL");
+const User = require("../models/user");
 
 // Generate JWT untuk user MySQL
-const generateToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      googleId: user.googleId,
+      displayName: user.displayName,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
 };
 
 // Register user dengan username & password (MySQL)
@@ -35,26 +45,25 @@ const login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Username atau Password salah!" });
 
-    const token = generateToken({ id: user.id, username: user.username });
+    const token = generateToken({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    });
     res.json({ message: "Login Sukses!", token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Generate JWT untuk user Google (MongoDB)
 const generateTokenForGoogleUser = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      googleId: user.googleId,
-      displayName: user.displayName,
-      email: user.email,
-      photo: user.photo,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+  return generateToken({
+    id: user.id,
+    username: user.username,
+    googleId: user.googleId,
+    displayName: user.displayName,
+    role: user.role,
+  });
 };
 
 module.exports = {
