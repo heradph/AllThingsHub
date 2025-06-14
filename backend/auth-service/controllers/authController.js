@@ -38,12 +38,24 @@ const login = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.getUserByUsername(username);
-    if (!user)
-      return res.status(400).json({ message: "Username atau Password salah!" });
+    if (!user) {
+      // Track failed attempt and get current count
+      const attempts = res.trackFailedAttempt();
+      return res.status(400).json({ 
+        message: "Username atau Password salah!",
+        attemptsRemaining: 5 - attempts
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Username atau Password salah!" });
+    if (!isMatch) {
+      // Track failed attempt and get current count
+      const attempts = res.trackFailedAttempt();
+      return res.status(400).json({ 
+        message: "Username atau Password salah!",
+        attemptsRemaining: 5 - attempts
+      });
+    }
 
     const token = generateToken({
       id: user.id,
