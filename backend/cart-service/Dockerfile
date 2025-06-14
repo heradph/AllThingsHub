@@ -1,8 +1,7 @@
-FROM node:20.18.0
+FROM node:20
 WORKDIR /app
-COPY package*.json .
+COPY package*.json ./
 RUN npm install
-COPY . . 
-RUN chmod +x /app/wait-for-it.sh
+COPY . .
 EXPOSE 3001
-CMD ["node", "cart.js"]
+CMD ["node", "app.js"]

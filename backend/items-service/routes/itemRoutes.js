@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../db/dbSQL");
-const verifyAdmin = require("../../middleware/verifyAdmin");
-const auth = require("../../middleware/auth");
+const db = require("../db/dbSQL");
+const verifyAdmin = require("../middleware/verifyAdmin");
+const auth = require("../middleware/auth");
 
 router.get("/items", async (req, res) => {
   try {
@@ -44,7 +44,7 @@ router.post("/items", auth, verifyAdmin, async (req, res) => {
   }
 });
 
-router.put("/items/:id", auth,  verifyAdmin, async (req, res) => {
+router.put("/items/:id", auth, verifyAdmin, async (req, res) => {
   const { name, slug, price, description, image } = req.body;
   try {
     const sql =

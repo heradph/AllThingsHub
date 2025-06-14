@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
+const { limiter, speedLimiter } = require("./middleware/limiter");
 const app = express();
 
 app.use(cors());
@@ -44,6 +45,8 @@ app.use(
 
 app.use(
   "/checkoutService",
+  limiter,
+  speedLimiter,
   createProxyMiddleware({
     target: process.env.CHECKOUT_SERVICE_URL,
     changeOrigin: true,

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../db/dbSQL");
-const auth = require("../../middleware/auth");
+const db = require("../db/dbSQL");
+const auth = require("../middleware/auth");
 
 // Get list of user's transactions
 router.get("/transactions", auth, async (req, res) => {

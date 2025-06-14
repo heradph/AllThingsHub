@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../db/dbSQL");
-const auth = require("../../middleware/auth");
+const db = require("../db/dbSQL");
+const auth = require("../middleware/auth");
 
 router.post("/cart", auth, async (req, res) => {
   const { itemId, quantity } = req.body;

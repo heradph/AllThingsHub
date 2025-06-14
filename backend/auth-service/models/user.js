@@ -1,4 +1,4 @@
-const db = require("../../db/dbSQL");
+const db = require("../db/dbSQL");
 
 async function createUser(
   username,

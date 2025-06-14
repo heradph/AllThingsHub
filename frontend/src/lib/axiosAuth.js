@@ -1,5 +1,5 @@
 import axios from "axios";
 
 export const axiosAuth = axios.create({
-  baseURL: "http://localhost:300",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 });

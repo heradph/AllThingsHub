@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../../db/dbSQL");
-const auth = require("../../middleware/auth");
+const db = require("../db/dbSQL");
+const auth = require("../middleware/auth");
 
 router.post("/checkout", auth, async (req, res) => {
   const userId = req.user.id;

@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const db = require("../db/dbSQL");
+const db = require("./db/dbSQL");
 const checkoutRoutes = require("./routes/checkoutRoutes");
 require("dotenv").config();
 const cors = require("cors");

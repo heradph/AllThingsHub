@@ -1,0 +1,136 @@
+version: "3.8"
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "4000:4000"
+    depends_on:
+      - gateway
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - app-network
+
+  gateway:
+    build: ./backend/gateway
+    ports:
+      - "300:300"
+    depends_on:
+      - auth-service
+      - items-service
+      - cart-service
+      - checkout-service
+      - transaction-service
+    env_file:
+      - ./backend/gateway/.env
+    restart: always
+    networks:
+      - app-network
+
+  auth-service:
+    build: ./backend/auth-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - PORT=3000
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=allthingshub
+    restart: always
+    networks:
+      - app-network
+
+  cart-service:
+    build: ./backend/cart-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    environment:
+      - PORT=3001
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=allthingshub
+    restart: always
+    networks:
+      - app-network
+
+  items-service:
+    build: ./backend/items-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+    environment:
+      - PORT=3002
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=allthingshub
+    restart: always
+    networks:
+      - app-network
+
+  checkout-service:
+    build: ./backend/checkout-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - db
+    environment:
+      - PORT=3003
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=allthingshub
+    restart: always
+    networks:
+      - app-network
+
+  transaction-service:
+    build: ./backend/transaction-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      - db
+    environment:
+      - PORT=3004
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=allthingshub
+    restart: always
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: allthingshub
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - app-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:
