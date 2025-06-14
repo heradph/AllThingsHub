@@ -32,11 +32,11 @@ router.get("/items/:slug", async (req, res) => {
 
 // HANYAAA ADMINN!!
 router.post("/items", auth, verifyAdmin, async (req, res) => {
-  const { name, slug, price, description } = req.body;
+  const { name, slug, price, description, image } = req.body;
   try {
     const sql =
-      "INSERT INTO items (name, slug, price, description) VALUES (?, ?, ?, ?)";
-    await db.query(sql, [name, slug, price, description]);
+      "INSERT INTO items (name, slug, price, description, image) VALUES (?, ?, ?, ?, ?)";
+    await db.query(sql, [name, slug, price, description, image]);
     res.status(201).json({ message: "Item berhasil ditambahkan" });
   } catch (err) {
     console.error(err);
@@ -44,16 +44,17 @@ router.post("/items", auth, verifyAdmin, async (req, res) => {
   }
 });
 
-router.put("/items/:id", verifyAdmin, async (req, res) => {
-  const { name, slug, price, description } = req.body;
+router.put("/items/:id", auth,  verifyAdmin, async (req, res) => {
+  const { name, slug, price, description, image } = req.body;
   try {
     const sql =
-      "UPDATE items SET name = ?, slug = ?, price = ?, description = ? WHERE id = ?";
+      "UPDATE items SET name = ?, slug = ?, price = ?, description = ?, image = ? WHERE id = ?";
     const [result] = await db.query(sql, [
       name,
       slug,
       price,
       description,
+      image,
       req.params.id,
     ]);
 
@@ -68,7 +69,7 @@ router.put("/items/:id", verifyAdmin, async (req, res) => {
   }
 });
 
-router.delete("/items/:id", verifyAdmin, async (req, res) => {
+router.delete("/items/:id", auth, verifyAdmin, async (req, res) => {
   try {
     const sql = "DELETE FROM items WHERE id = ?";
     const [result] = await db.query(sql, [req.params.id]);

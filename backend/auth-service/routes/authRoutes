@@ -30,13 +30,8 @@ router.get(
   }),
   (req, res) => {
     const token = generateTokenForGoogleUser(req.user);
-    res.send(`<h1> Hello, ${req.user.displayname}! </h1>
-    <p> Email: ${req.user.email} </p>
-    <img src="${req.user.photo}" width="100"/>
-    <br>
-    <a href="/logout"> logout </a>
-    <br><br>
-    Token-Anda: ${token}`);
+
+    res.redirect(`http://localhost:4000/?token=${token}`);
   }
 );
 

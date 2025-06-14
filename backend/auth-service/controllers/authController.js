@@ -9,7 +9,7 @@ const generateToken = (user) => {
       id: user.id,
       username: user.username,
       googleId: user.googleId,
-      displayName: user.displayName,
+      displayName: user.displayname,
       role: user.role,
     },
     process.env.JWT_SECRET,
@@ -48,6 +48,7 @@ const login = async (req, res) => {
     const token = generateToken({
       id: user.id,
       username: user.username,
+      displayName: user.displayname,
       role: user.role,
     });
     res.json({ message: "Login Sukses!", token });
@@ -59,9 +60,8 @@ const login = async (req, res) => {
 const generateTokenForGoogleUser = (user) => {
   return generateToken({
     id: user.id,
-    username: user.username,
+    username: user.displayname,
     googleId: user.googleId,
-    displayName: user.displayName,
     role: user.role,
   });
 };
