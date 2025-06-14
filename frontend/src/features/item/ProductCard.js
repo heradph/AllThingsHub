@@ -1,7 +1,14 @@
 import { Box, Flex, chakra } from "@chakra-ui/react";
 import Link from "next/link";
 
-export default function ProductCard({ name, price, image, slug }) {
+export default function ProductCard({
+  id,
+  name,
+  price,
+  image,
+  slug,
+  onAddToCart,
+}) {
   return (
     <Flex direction="column" alignItems="center" w="sm" mx="auto">
       <Box
@@ -68,6 +75,7 @@ export default function ProductCard({ name, price, image, slug }) {
             textTransform="uppercase"
             _hover={{ bg: "gray.700", _dark: { bg: "gray.600" } }}
             _focus={{ outline: "none" }}
+            onClick={() => onAddToCart(id)}
           >
             Add to cart
           </chakra.button>

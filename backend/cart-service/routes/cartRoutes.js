@@ -3,100 +3,101 @@ const router = express.Router();
 const db = require("../../db/dbSQL");
 const auth = require("../../middleware/auth");
 
-// Tambah item ke cart
-router.post("/cart/add", async (req, res) => {
-  const { user_id, item_id } = req.body;
+router.post("/cart", auth, async (req, res) => {
+  const { itemId, quantity } = req.body;
+  const userId = req.user.id;
 
   try {
-    // Ambil detail item
-    const [itemData] = await db.query("SELECT * FROM items WHERE id = ?", [item_id]);
-    if (itemData.length === 0) {
-      return res.status(404).json({ message: "Item tidak ditemukan" });
-    }
-    const item = itemData[0];
-
-    // Cek apakah item sudah ada di cart
-    const [cartCheck] = await db.query(
+    // Cek apakah item sudah ada di cart user
+    const [existing] = await db.query(
       "SELECT * FROM cart WHERE user_id = ? AND item_id = ?",
-      [user_id, item_id]
+      [userId, itemId]
     );
 
-    if (cartCheck.length > 0) {
-      // Jika ada → increment quantity
+    if (existing.length > 0) {
+      // Kalau ada, update quantity
       await db.query(
-        "UPDATE cart SET quantity = quantity + 1 WHERE user_id = ? AND item_id = ?",
-        [user_id, item_id]
+        "UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND item_id = ?",
+        [quantity, userId, itemId]
       );
     } else {
-      // Jika belum ada → insert baru
+      // Kalau belum ada, insert baru
       await db.query(
         "INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, ?)",
-        [user_id, item_id, 1]
+        [userId, itemId, quantity]
       );
     }
 
-    res.status(200).json({ message: "Item berhasil ditambahkan ke keranjang" });
+    res.json({ message: "Item added to cart" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// Update quantity (increment atau decrement)
-router.post("/cart/update/:item_id/:action", async (req, res) => {
-  const { user_id } = req.body;
-  const { item_id, action } = req.params;
+router.get("/cart", auth, async (req, res) => {
+  const userId = req.user.id;
 
   try {
-    if (action === "increment") {
-      await db.query(
-        "UPDATE cart SET quantity = quantity + 1 WHERE user_id = ? AND item_id = ?",
-        [user_id, item_id]
-      );
-    } else if (action === "decrement") {
-      // Pastikan tidak kurang dari 1
-      await db.query(
-        "UPDATE cart SET quantity = GREATEST(quantity - 1, 1) WHERE user_id = ? AND item_id = ?",
-        [user_id, item_id]
-      );
-    }
-    res.json({ message: "Cart berhasil diperbarui" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// Hapus item dari cart
-router.post("/cart/remove/:item_id", async (req, res) => {
-  const { user_id } = req.body;
-  const { item_id } = req.params;
-
-  try {
-    await db.query("DELETE FROM cart WHERE user_id = ? AND item_id = ?", [user_id, item_id]);
-    res.json({ message: "Item berhasil dihapus dari keranjang" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// Ambil semua item dalam cart
-router.get("/cart", async (req, res) => {
-  const { user_id } = req.query;
-
-  try {
-    const [items] = await db.query(
-      `SELECT c.item_id, c.quantity, i.nama, i.slug, i.description, i.price, i.image1, i.image2
-       FROM cart c
-       JOIN items i ON c.item_id = i.id
-       WHERE c.user_id = ?`,
-      [user_id]
+    const [cartItems] = await db.query(
+      `
+      SELECT cart.id, items.name, items.price, items.image, cart.quantity
+      FROM cart
+      JOIN items ON cart.item_id = items.id
+      WHERE cart.user_id = ?
+      `,
+      [userId]
     );
-    res.json({ items });
+
+    res.json(cartItems);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.patch("/cart/:cartId", auth, async (req, res) => {
+  const userId = req.user.id;
+  const { cartId } = req.params;
+  const { quantity } = req.body;
+
+  if (!quantity || quantity < 1) {
+    return res.status(400).json({ error: "Quantity must be at least 1" });
+  }
+
+  try {
+    const [result] = await db.query(
+      `UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?`,
+      [quantity, cartId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Cart item not found" });
+    }
+
+    res.json({ message: "Quantity updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/cart/:cartId", auth, async (req, res) => {
+  const userId = req.user.id;
+  const { cartId } = req.params;
+
+  try {
+    const [result] = await db.query(
+      `DELETE FROM cart WHERE id = ? AND user_id = ?`,
+      [cartId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Cart item not found" });
+    }
+
+    res.json({ message: "Item removed from cart" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

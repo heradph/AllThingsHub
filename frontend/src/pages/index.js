@@ -8,6 +8,9 @@ import {
   Box,
   Button,
   HStack,
+  Flex,
+  Image,
+  useToast,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import ProductCard from "@/features/item/ProductCard";
@@ -15,10 +18,11 @@ import { useFetchItems } from "../features/item/useFetchItems";
 
 export default function ItemsPage() {
   const { data, isLoading } = useFetchItems();
+  const toast = useToast();
 
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState("");
-  const [isChecking, setIsChecking] = useState(true); // Tambahan untuk proses loading token
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -33,17 +37,14 @@ export default function ItemsPage() {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        console.log("Token payload:", payload);
-
         setDisplayName(payload.displayName || payload.username || "");
         setRole(payload.role || "");
       } catch (err) {
-        console.error("Invalid token");
         localStorage.removeItem("token");
       }
     }
 
-    setIsChecking(false); // Proses cek selesai
+    setIsChecking(false);
   }, []);
 
   const handleLogout = () => {
@@ -51,16 +52,59 @@ export default function ItemsPage() {
     window.location.href = "/login";
   };
 
+  const handleAddToCart = async (itemId) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/cartService/cart`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ itemId, quantity: 1 }),
+        }
+      );
+ 
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to add to cart");
+
+      toast({
+        title: "Item added to cart successfully!",
+        status: "success",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to add item to cart",
+        status: "error",
+      });
+    }
+  };
+
   return (
-    <Container maxW="6xl" py={10}>
+    <Container maxW="6xl" py={4}>
+      <Flex align="center" mb={6} mx={-150} gap={3}>
+        <Image
+          src="/logo.png"
+          alt="All Things Hub Logo"
+          boxSize="60px"
+          objectFit="contain"
+        />
+        <Heading size="xl" color="#4a474d ">
+          All Things Hub
+        </Heading>
+      </Flex>
+
       <Heading mb={4}>Product List</Heading>
 
-      {isChecking ? ( // Menunggu pengecekan token selesai
+      {isChecking ? (
         <Center my={8}>
           <Spinner size="xl" />
         </Center>
       ) : (
-        <HStack spacing={4} mb={8}>
+        <HStack spacing={4} mb={8} flexWrap="wrap">
           {!displayName && (
             <>
               <Button
@@ -85,6 +129,18 @@ export default function ItemsPage() {
               <Button colorScheme="red" onClick={handleLogout}>
                 Logout
               </Button>
+              <Button
+                colorScheme="blue"
+                onClick={() => (window.location.href = "/cart")}
+              >
+                Cart
+              </Button>
+              <Button
+                colorScheme="green"
+                onClick={() => (window.location.href = "/transactions")}
+              >
+                Riwayat Transaksi
+              </Button>
               {role === "admin" && (
                 <Button
                   colorScheme="purple"
@@ -107,10 +163,12 @@ export default function ItemsPage() {
           {data?.map((item) => (
             <ProductCard
               key={item.id}
+              id={item.id}
               name={item.name}
               slug={item.slug}
               price={item.price}
               image={item.image}
+              onAddToCart={handleAddToCart}
             />
           ))}
         </SimpleGrid>

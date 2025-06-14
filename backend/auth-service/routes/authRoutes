@@ -8,12 +8,6 @@ const {
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send(
-    `<a href="/auth/google">login</a> <br> <a href="/auth/google/reauth">Reauth</a>`
-  );
-});
-
 router.post("/register", register);
 router.post("/login", login);
 

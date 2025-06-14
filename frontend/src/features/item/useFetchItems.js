@@ -5,7 +5,7 @@ export const useFetchItems = () => {
   return useQuery({
     queryKey: ["items"],
     queryFn: async () => {
-      const itemRes = await axiosInstance.get("/items");
+      const itemRes = await axiosInstance.get("/itemService/items");
       return itemRes.data;
     },
   });

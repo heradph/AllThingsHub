@@ -9,9 +9,12 @@ import {
   Input,
   Button,
   useToast,
+  Text,
+  Flex,
 } from "@chakra-ui/react";
 import { useFormik } from "formik";
 import { axiosAuth } from "@/lib/axiosAuth";
+import { ArrowForwardIcon } from "@chakra-ui/icons";
 
 export default function LoginPage() {
   const toast = useToast();
@@ -23,7 +26,7 @@ export default function LoginPage() {
     },
     onSubmit: async (values) => {
       try {
-        const res = await axiosAuth.post("/auth/login", values);
+        const res = await axiosAuth.post("/authService/auth/login", values);
         const data = res.data;
 
         localStorage.setItem("token", data.token);
@@ -49,12 +52,29 @@ export default function LoginPage() {
       <Head>
         <title>Login</title>
       </Head>
-      <main>
-        <Container my={50}>
-          <Heading mb={4}>Login</Heading>
+
+      <Flex minH="100vh" justify="center" align="center" bg="gray.50" p={4}>
+        <Container maxW="md" p={8} borderRadius="lg" bg="white" boxShadow="md">
+          <Flex justify="flex-end" mb={6}>
+            <Button
+              as="a"
+              href="/"
+              rightIcon={<ArrowForwardIcon />}
+              colorScheme="gray"
+              variant="outline"
+              size="sm"
+            >
+              Kembali ke Katalog
+            </Button>
+          </Flex>
+
+          <Heading mb={6} textAlign="center">
+            Login
+          </Heading>
+
           <form onSubmit={formik.handleSubmit}>
             <VStack spacing={4}>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Username</FormLabel>
                 <Input
                   name="username"
@@ -62,7 +82,7 @@ export default function LoginPage() {
                   onChange={formik.handleChange}
                 />
               </FormControl>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel>Password</FormLabel>
                 <Input
                   type="password"
@@ -74,18 +94,26 @@ export default function LoginPage() {
               <Button type="submit" colorScheme="green" width="full">
                 Login
               </Button>
+              <Text>Or</Text>
               <Button
                 as="a"
-                href="http://localhost:3000/auth/google"
+                href="http://localhost:300/authService/auth/google"
                 colorScheme="blue"
                 width="full"
               >
                 Login dengan Google
               </Button>
+              <Button
+                variant="link"
+                colorScheme="blue"
+                onClick={() => (window.location.href = "/register")}
+              >
+                Belum punya akun? Register
+              </Button>
             </VStack>
           </form>
         </Container>
-      </main>
+      </Flex>
     </>
   );
 }

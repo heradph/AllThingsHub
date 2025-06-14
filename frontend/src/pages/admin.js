@@ -17,6 +17,8 @@ import {
   Button,
   useToast,
   HStack,
+  Flex,
+  Image,
 } from "@chakra-ui/react";
 import { useFetchItems } from "@/features/item/useFetchItems";
 import { useMutation } from "@tanstack/react-query";
@@ -56,9 +58,9 @@ export default function ItemsPage() {
   const { mutate: saveItem, isLoading: saving } = useMutation({
     mutationFn: (body) => {
       if (editId) {
-        return axiosInstance.put(`/items/${editId}`, body);
+        return axiosInstance.put(`/itemService/items/${editId}`, body);
       }
-      return axiosInstance.post("/items", body);
+      return axiosInstance.post("/itemService/items", body);
     },
     onSuccess: () => {
       refetch();
@@ -73,7 +75,7 @@ export default function ItemsPage() {
   });
 
   const { mutate: deleteItem } = useMutation({
-    mutationFn: (id) => axiosInstance.delete(`/items/${id}`),
+    mutationFn: (id) => axiosInstance.delete(`/itemService/items/${id}`),
     onSuccess: () => {
       refetch();
       toast({ title: "Item berhasil dihapus!", status: "success" });
@@ -151,8 +153,21 @@ export default function ItemsPage() {
       </Head>
       <main>
         <Container maxW="container.lg" py={6}>
+          <Flex align="center" mb={6} mx={-150} gap={3}>
+            <Image
+              src="/logo.png"
+              alt="All Things Hub Logo"
+              boxSize="60px"
+              objectFit="contain"
+            />
+            <Heading size="xl" color="#4a474d ">
+              All Things Hub
+            </Heading>
+          </Flex>
+
           <Heading mb={6}>Admin Items Page</Heading>
           <Button
+          mb={10}
             colorScheme="blue"
             onClick={() => (window.location.href = "/")}
           >
