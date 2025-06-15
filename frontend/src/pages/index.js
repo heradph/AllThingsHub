@@ -67,17 +67,17 @@ export default function ItemsPage() {
           body: JSON.stringify({ itemId, quantity: 1 }),
         }
       );
- 
+
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Failed to add to cart");
+      if (!res.ok) throw new Error(result.message || "Login Dahulu!");
 
       toast({
-        title: "Item added to cart successfully!",
+        title: "Item ditambahkan ke Cart!",
         status: "success",
       });
     } catch (err) {
       toast({
-        title: "Failed to add item to cart",
+        title: "Login Dahulu!",
         status: "error",
       });
     }

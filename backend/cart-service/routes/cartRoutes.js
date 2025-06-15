@@ -8,20 +8,17 @@ router.post("/cart", auth, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Cek apakah item sudah ada di cart user
     const [existing] = await db.query(
       "SELECT * FROM cart WHERE user_id = ? AND item_id = ?",
       [userId, itemId]
     );
 
     if (existing.length > 0) {
-      // Kalau ada, update quantity
       await db.query(
         "UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND item_id = ?",
         [quantity, userId, itemId]
       );
     } else {
-      // Kalau belum ada, insert baru
       await db.query(
         "INSERT INTO cart (user_id, item_id, quantity) VALUES (?, ?, ?)",
         [userId, itemId, quantity]

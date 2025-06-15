@@ -1,5 +1,12 @@
-version: "3.8"
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+
   frontend:
     build: ./frontend
     ports:
@@ -9,6 +16,14 @@ services:
     env_file:
       - .env
     restart: always
+    networks:
+      - app-network
+
+  consumer-service:
+    build: ./backend/consumer-service
+    container_name: consumer-service
+    depends_on:
+      - rabbitmq
     networks:
       - app-network
 
@@ -82,6 +97,7 @@ services:
       - "3003:3003"
     depends_on:
       - db
+      - rabbitmq
     environment:
       - PORT=3003
       - DB_HOST=db
