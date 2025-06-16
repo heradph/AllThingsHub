@@ -136,7 +136,7 @@ export default function RegisterPage() {
               <Text>Or</Text>
               <Button
                 as="a"
-                href="http://localhost:300/authService/auth/google"
+                href={`${process.env.NEXT_PUBLIC_API_URL}/authService/auth/google`}
                 colorScheme="blue"
                 width="full"
               >

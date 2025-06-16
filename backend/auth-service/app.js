@@ -6,7 +6,6 @@ const authRoutes = require("./routes/authRoutes");
 const db = require("./db/dbSQL");
 
 const cors = require("cors");
-
 const app = express();
 
 app.use(cors());

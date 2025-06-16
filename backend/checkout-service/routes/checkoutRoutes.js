@@ -47,6 +47,7 @@ router.post("/checkout", auth, async (req, res) => {
 
       totalPrice += item.quantity * itemPrice;
 
+      // PUSH TO RABBITMQ
       itemDetails.push({
         item_id: item.item_id,
         name: itemName,
@@ -63,6 +64,7 @@ router.post("/checkout", auth, async (req, res) => {
 
     await db.query("DELETE FROM cart WHERE user_id = ?", [userId]);
 
+    // ISI PAYLOAD RABBITMQ
     const payload = {
       transactionId,
       username,
@@ -72,7 +74,7 @@ router.post("/checkout", auth, async (req, res) => {
     };
 
     console.log("📤 Payload to sendToQueue:", payload);
-    sendToQueue(payload);
+    sendToQueue(payload); //KIRIM KE QUEUE RABBITMQ
 
     return res.json({
       message: "Checkout Success!",

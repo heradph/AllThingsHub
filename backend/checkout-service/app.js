@@ -17,12 +17,12 @@ const PORT = process.env.PORT || 3003;
 
 const startServer = async () => {
   try {
-    await connectRabbitMQ(); // ⬅️ Tunggu RabbitMQ connect dulu sebelum start server
+    await connectRabbitMQ();
     app.listen(PORT, () => {
-      console.log(`✅ Server running on port http://localhost:${PORT}`);
+      console.log(`Server running on port http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error("❌ Failed to start server:", err);
+    console.error("Failed to start server:", err);
     process.exit(1);
   }
 };

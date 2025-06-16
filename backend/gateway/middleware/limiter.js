@@ -2,15 +2,19 @@ const rateLimit = require("express-rate-limit");
 const slowDown = require("express-slow-down");
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 2,
-  message: "Terlalu banyak permintaan, coba lagi nanti.",
+  windowMs: 2 * 60 * 1000, // 5 menit
+  max: 1, 
+  message: "Anda hanya bisa melakukan checkout 1 kali dalam 2 menit.",
 });
 
 const speedLimiter = slowDown({
-  windowMs: 15 * 60 * 1000,
-  delayAfter: 5, // Setelah 10 request → mulai delay
-  delayMs: 500, // Tambah delay 500ms tiap request setelahnya
+  windowMs: 10 * 1000, 
+  delayAfter: 3,
+  delayMs: (used, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (used - delayAfter) * 500; 
+  },
+  validate: { delayMs: false }, 
 });
 
-module.exports = { speedLimiter, limiter };
+module.exports = { limiter, speedLimiter };

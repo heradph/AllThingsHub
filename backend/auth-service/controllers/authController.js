@@ -2,7 +2,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-// Generate JWT untuk user MySQL
 const generateToken = (user) => {
   return jwt.sign(
     {
@@ -17,7 +16,6 @@ const generateToken = (user) => {
   );
 };
 
-// Register user dengan username & password (MySQL)
 const register = async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -33,7 +31,6 @@ const register = async (req, res) => {
   }
 };
 
-// Login user dengan username & password (MySQL)
 const login = async (req, res) => {
   const { username, password } = req.body;
   try {

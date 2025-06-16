@@ -1,0 +1,450 @@
+# Persistent Volume untuk MySQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# MySQL Deployment & Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8
+          env:
+            - name: MYSQL_DATABASE
+              value: allthingshub
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+---
+# Adminer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adminer
+spec:
+  selector:
+    matchLabels:
+      app: adminer
+  template:
+    metadata:
+      labels:
+        app: adminer
+    spec:
+      containers:
+        - name: adminer
+          image: adminer
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adminer-service
+spec:
+  selector:
+    app: adminer
+  ports:
+    - port: 8080
+      nodePort: 32001
+  type: NodePort
+---
+# RabbitMQ
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  type: NodePort
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+      nodePort: 32002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: herawan/allthingshub-auth-service:latest
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: allthingshub
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 3000
+---
+# Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service
+spec:
+  selector:
+    matchLabels:
+      app: cart-service
+  template:
+    metadata:
+      labels:
+        app: cart-service
+    spec:
+      containers:
+        - name: cart-service
+          image: herawan/allthingshub-cart-service:latest
+          env:
+            - name: PORT
+              value: "3001"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: allthingshub
+          ports:
+            - containerPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-service
+spec:
+  selector:
+    app: cart-service
+  ports:
+    - port: 3001
+---
+# Items Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: items-service
+spec:
+  selector:
+    matchLabels:
+      app: items-service
+  template:
+    metadata:
+      labels:
+        app: items-service
+    spec:
+      containers:
+        - name: items-service
+          image: herawan/allthingshub-items-service:latest
+          env:
+            - name: PORT
+              value: "3002"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: allthingshub
+          ports:
+            - containerPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: items-service
+spec:
+  selector:
+    app: items-service
+  ports:
+    - port: 3002
+---
+# Checkout Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service
+spec:
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z rabbitmq 5672; do echo waiting for rabbitmq; sleep 3; done;",
+            ]
+      containers:
+        - name: checkout-service
+          image: herawan/allthingshub-checkout-service:latest
+          env:
+            - name: PORT
+              value: "3003"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: allthingshub
+          ports:
+            - containerPort: 3003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-service
+spec:
+  selector:
+    app: checkout-service
+  ports:
+    - port: 3003
+---
+# Transaction Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+spec:
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+        - name: transaction-service
+          image: herawan/allthingshub-transaction-service:latest
+          env:
+            - name: PORT
+              value: "3004"
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: allthingshub
+          ports:
+            - containerPort: 3004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+spec:
+  selector:
+    app: transaction-service
+  ports:
+    - port: 3004
+---
+# Gateway Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: herawan/allthingshub-gateway:latest
+          ports:
+            - containerPort: 300
+          env:
+            - name: GATEWAY_PORT
+              value: "300"
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:3000"
+            - name: CART_SERVICE_URL
+              value: "http://cart-service:3001"
+            - name: ITEMS_SERVICE_URL
+              value: "http://items-service:3002"
+            - name: CHECKOUT_SERVICE_URL
+              value: "http://checkout-service:3003"
+            - name: TRANSACTION_SERVICE_URL
+              value: "http://transaction-service:3004"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 300
+      targetPort: 300
+---
+# Consumer Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-service
+spec:
+  selector:
+    matchLabels:
+      app: consumer-service
+  template:
+    metadata:
+      labels:
+        app: consumer-service
+    spec:
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z rabbitmq 5672; do echo waiting for rabbitmq; sleep 3; done;",
+            ]
+      containers:
+        - name: consumer-service
+          image: herawan/allthingshub-consumer-service:latest
+---
+# Frontend (Next.js)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: herawan/allthingshub-frontend:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "4000"
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://gateway:300"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+      nodePort: 32004

@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require("../db/dbSQL");
 const auth = require("../middleware/auth");
 
-// Get list of user's transactions
 router.get("/transactions", auth, async (req, res) => {
   const userId = req.user.id;
 
@@ -19,7 +18,6 @@ router.get("/transactions", auth, async (req, res) => {
   }
 });
 
-// Get detail for a specific transaction
 router.get("/transactions/:id", auth, async (req, res) => {
   const userId = req.user.id;
   const transactionId = req.params.id;

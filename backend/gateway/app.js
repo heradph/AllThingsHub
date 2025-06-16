@@ -7,7 +7,6 @@ const app = express();
 
 app.use(cors());
 
-//untuk service nya auth
 app.use(
   "/authService",
   createProxyMiddleware({
@@ -19,7 +18,6 @@ app.use(
   })
 );
 
-// Untuk service nya cart-service
 app.use(
   "/cartService",
   createProxyMiddleware({
@@ -31,7 +29,6 @@ app.use(
   })
 );
 
-// Untuk service nya items-service
 app.use(
   "/itemService",
   createProxyMiddleware({
@@ -68,6 +65,6 @@ app.use(
 );
 
 const PORT = process.env.GATEWAY_PORT || 300;
-app.listen(PORT, () =>
+app.listen(PORT, "0.0.0.0", () =>
   console.log(`API Gateway running at http://localhost:${PORT}`)
 );

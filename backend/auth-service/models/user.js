@@ -21,8 +21,6 @@ async function createUserGoogle(
   email,
   displayname,
   photo,
-  familyName,
-  givenName,
   role = "user"
 ) {
   await db.query(
