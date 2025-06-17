@@ -149,6 +149,8 @@ spec:
               value: root
             - name: DB_NAME
               value: allthingshub
+            - name: GOOGLE_CALLBACK_URL
+              value: "http://localhost:32005/auth/callback"
           ports:
             - containerPort: 3000
 ---
@@ -159,8 +161,11 @@ metadata:
 spec:
   selector:
     app: auth-service
+  type: NodePort
   ports:
     - port: 3000
+      targetPort: 3000
+      nodePort: 32005
 ---
 # Cart Service
 apiVersion: apps/v1
@@ -376,9 +381,11 @@ metadata:
 spec:
   selector:
     app: gateway
+  type: NodePort
   ports:
     - port: 300
       targetPort: 300
+      nodePort: 32003 #
 ---
 # Consumer Service
 apiVersion: apps/v1
